@@ -6,12 +6,22 @@ let currentPlayer = 1; // 1 = Hitam, 2 = Putih
 let player1Name = "Pemain 1";
 let player2Name = "Pemain 2";
 let gameOver = false;
+let gameMode = 'pvp'; // pvp, pvc
+
+// Statistics State
+let gameStats = {
+    pvp: { black: 0, white: 0, draw: 0 },
+    pvc: { win: 0, loss: 0, draw: 0 }
+};
 
 // Timer State
 let useTimer = false;
 let timePerTurn = 30;
 let timeLeft = 30;
 let timerInterval = null;
+
+// Game Settings
+let showValidMoves = true;
 
 // DOM Elements
 const startScreen = document.getElementById('start-screen');
@@ -28,14 +38,50 @@ const finalScoreWhite = document.getElementById('final-score-white');
 const p1NameDisplay = document.getElementById('p1-name');
 const p2NameDisplay = document.getElementById('p2-name');
 
+// Mode Selection Elements
+const modeBtns = document.querySelectorAll('.mode-btn');
+const p2InputWrapper = document.getElementById('p2-input-wrapper');
+const player2Input = document.getElementById('player2');
+
+// History Elements
+const historyBtn = document.getElementById('history-btn');
+const historyModal = document.getElementById('history-modal');
+const closeHistoryBtn = document.getElementById('close-history-btn');
+const clearHistoryBtn = document.getElementById('clear-history-btn');
+
 // Timer Elements
 const timerToggle = document.getElementById('timer-toggle');
+const validMovesToggle = document.getElementById('valid-moves-toggle');
 const timerSettings = document.getElementById('timer-settings');
 const timeInput = document.getElementById('time-per-turn');
 const timerBlackEl = document.getElementById('timer-black');
 const timerWhiteEl = document.getElementById('timer-white');
 
+// --- Initialization ---
+loadStats();
+
 // --- Event Listeners ---
+
+// Mode Selection
+modeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        // Remove active class from all
+        modeBtns.forEach(b => b.classList.remove('active'));
+        // Add active to clicked
+        btn.classList.add('active');
+        // Set mode
+        gameMode = btn.dataset.mode;
+        
+        // Update UI based on mode
+        if (gameMode === 'pvc') {
+            p2InputWrapper.classList.add('hidden');
+            player2Input.value = "Komputer";
+        } else {
+            p2InputWrapper.classList.remove('hidden');
+            if (player2Input.value === "Komputer") player2Input.value = "Pemain 2";
+        }
+    });
+});
 
 // Toggle Timer Settings
 timerToggle.addEventListener('change', (e) => {
@@ -50,19 +96,24 @@ document.getElementById('start-btn').addEventListener('click', () => {
     player1Name = document.getElementById('player1').value || "Hitam";
     player2Name = document.getElementById('player2').value || "Putih";
     
+    if (gameMode === 'pvc') player2Name = "Komputer";
+
     useTimer = timerToggle.checked;
+    showValidMoves = validMovesToggle.checked;
+    
     timePerTurn = parseInt(timeInput.value) || 30;
 
     p1NameDisplay.textContent = player1Name;
     p2NameDisplay.textContent = player2Name;
     
-    // Setup Timer UI Visibility
+    // Setup UI Visibility
     if (useTimer) {
         timerBlackEl.classList.remove('hidden');
         timerWhiteEl.classList.remove('hidden');
     } else {
         timerBlackEl.classList.add('hidden');
         timerWhiteEl.classList.add('hidden');
+        useTimer = false;
     }
 
     startScreen.classList.add('hidden');
@@ -91,6 +142,32 @@ document.getElementById('menu-btn').addEventListener('click', () => {
     winnerModal.classList.add('hidden');
     removeConfetti();
 });
+
+// Undo Button
+
+// History Logic
+historyBtn.addEventListener('click', () => {
+    updateHistoryUI();
+    historyModal.classList.remove('hidden');
+});
+
+closeHistoryBtn.addEventListener('click', () => {
+    historyModal.classList.add('hidden');
+});
+
+clearHistoryBtn.addEventListener('click', () => {
+    if(confirm('Apakah Anda yakin ingin menghapus semua riwayat pertandingan?')) {
+        resetStats();
+    }
+});
+
+// Close modal when clicking outside
+window.addEventListener('click', (e) => {
+    if (e.target === historyModal) {
+        historyModal.classList.add('hidden');
+    }
+});
+
 
 // --- Game Logic ---
 
@@ -152,11 +229,18 @@ function getValidMoves(player) {
 
 function makeMove(row, col) {
     if (gameOver) return;
-    if (!isValidMove(row, col, currentPlayer)) return;
+    // Prevent player from moving during computer's turn
+    if (gameMode === 'pvc' && currentPlayer === 2) return;
     
+    if (!isValidMove(row, col, currentPlayer)) return;
+
     // Stop timer sementara animasi jalan (opsional, tapi lebih adil)
     if (useTimer) clearInterval(timerInterval);
 
+    executeMove(row, col);
+}
+
+function executeMove(row, col) {
     board[row][col] = currentPlayer;
     const opponent = currentPlayer === 1 ? 2 : 1;
     
@@ -175,9 +259,6 @@ function makeMove(row, col) {
         if (piecesToFlip.length > 0 && r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] === currentPlayer) {
             for (let p of piecesToFlip) {
                 board[p.r][p.c] = currentPlayer;
-                
-                // Trigger animasi flip di DOM jika perlu
-                // (Saat renderBoard dipanggil ulang, class baru akan handle animasi)
             }
         }
     }
@@ -273,18 +354,74 @@ function switchTurn(isTimeout = false) {
         } else {
             // Pemain berikutnya pass, giliran balik lagi
             if (!isTimeout) {
-                alert(`${nextPlayer === 1 ? player1Name : player2Name} tidak memiliki langkah valid! Giliran tetap pada ${currentPlayer === 1 ? player1Name : player2Name}.`);
-            } else {
-                // Jika timeout dan next player juga ga bisa jalan, ya balik lagi (tapi jarang terjadi bersamaan)
-                // Biarkan logika UI update menangani
+                const playerName = nextPlayer === 1 ? player1Name : player2Name;
+                const activeName = currentPlayer === 1 ? player1Name : player2Name;
+                
+                // Better UI for skip turn
+                const msg = document.createElement('div');
+                msg.textContent = `${playerName} tidak ada langkah! Giliran ${activeName} lagi.`;
+                msg.style.cssText = `
+                    position: fixed; top: 20%; left: 50%; transform: translate(-50%, -50%);
+                    background: rgba(108, 92, 231, 0.9); color: white; padding: 15px 30px;
+                    border-radius: 50px; z-index: 1000; font-weight: bold; animation: fadeOut 2.5s forwards;
+                `;
+                document.body.appendChild(msg);
+                setTimeout(() => { if (msg) msg.remove(); }, 2500);
             }
-            // currentPlayer tidak berubah
         }
     }
     
     updateUI();
     if (useTimer && !gameOver) startTimer();
+
+    // Check for Computer Turn
+    if (!gameOver && gameMode === 'pvc' && currentPlayer === 2) {
+        // Delay computer move slightly for better UX
+        setTimeout(computerMove, 1000);
+    }
 }
+
+// AI Implementation
+function computerMove() {
+    if (gameOver || currentPlayer !== 2) return;
+    
+    const validMoves = getValidMoves(2);
+    if (validMoves.length === 0) return; // Should be handled by switchTurn but just in case
+    
+    let bestMove = null;
+    let maxScore = -Infinity;
+
+    // Simple Heuristic: Corners > Edges > Mobility
+    // Weighted board positions
+    const weights = [
+        [100, -10, 10,  5,  5, 10, -10, 100],
+        [-10, -20,  1,  1,  1,  1, -20, -10],
+        [ 10,   1,  5,  2,  2,  5,   1,  10],
+        [  5,   1,  2,  1,  1,  2,   1,   5],
+        [  5,   1,  2,  1,  1,  2,   1,   5],
+        [ 10,   1,  5,  2,  2,  5,   1,  10],
+        [-10, -20,  1,  1,  1,  1, -20, -10],
+        [100, -10, 10,  5,  5, 10, -10, 100]
+    ];
+
+    // Evaluate each move
+    for (let move of validMoves) {
+        let score = weights[move.r][move.c];
+        
+        // Add random factor to make it less predictable/perfect
+        score += Math.random() * 5;
+        
+        if (score > maxScore) {
+            maxScore = score;
+            bestMove = move;
+        }
+    }
+
+    if (bestMove) {
+        executeMove(bestMove.r, bestMove.c);
+    }
+}
+
 
 
 function updateScores() {
@@ -340,7 +477,9 @@ function renderBoard() {
             
             const isValid = validMoves.some(m => m.r === r && m.c === c);
             if (isValid && !gameOver) {
-                cell.classList.add('valid-move');
+                if (showValidMoves) {
+                    cell.classList.add('valid-move');
+                }
                 cell.addEventListener('click', () => makeMove(r, c));
             }
             
@@ -363,6 +502,9 @@ function endGame() {
     const scores = updateScores();
     let winner = "";
     
+    // Update Stats
+    updateStats(scores);
+
     if (scores.black > scores.white) {
         winner = `${player1Name} Menang!`;
         startConfetti();
@@ -380,6 +522,53 @@ function endGame() {
     
     winnerModal.classList.remove('hidden');
 }
+
+// --- History & Stats Logic ---
+
+function loadStats() {
+    const savedStats = localStorage.getItem('othelloStats');
+    if (savedStats) {
+        gameStats = JSON.parse(savedStats);
+    }
+}
+
+function saveStats() {
+    localStorage.setItem('othelloStats', JSON.stringify(gameStats));
+}
+
+function updateStats(scores) {
+    if (gameMode === 'pvp') {
+        if (scores.black > scores.white) gameStats.pvp.black++;
+        else if (scores.white > scores.black) gameStats.pvp.white++;
+        else gameStats.pvp.draw++;
+    } else if (gameMode === 'pvc') {
+        if (scores.black > scores.white) gameStats.pvc.win++; // Player (Black) wins
+        else if (scores.white > scores.black) gameStats.pvc.loss++; // Computer (White) wins
+        else gameStats.pvc.draw++;
+    }
+    
+    saveStats();
+}
+
+function updateHistoryUI() {
+    document.getElementById('stats-pvp-black').textContent = gameStats.pvp.black;
+    document.getElementById('stats-pvp-white').textContent = gameStats.pvp.white;
+    document.getElementById('stats-pvp-draw').textContent = gameStats.pvp.draw;
+    
+    document.getElementById('stats-pvc-win').textContent = gameStats.pvc.win;
+    document.getElementById('stats-pvc-loss').textContent = gameStats.pvc.loss;
+    document.getElementById('stats-pvc-draw').textContent = gameStats.pvc.draw;
+}
+
+function resetStats() {
+    gameStats = {
+        pvp: { black: 0, white: 0, draw: 0 },
+        pvc: { win: 0, loss: 0, draw: 0 }
+    };
+    saveStats();
+    updateHistoryUI();
+}
+
 
 // --- Confetti Effect ---
 let confettiInterval;

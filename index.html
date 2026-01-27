@@ -23,18 +23,35 @@
         <p class="subtitle">Strategi Klasik, Desain Modern</p>
         
         <div class="input-container">
+            <!-- Mode Selection -->
+            <div class="mode-selection">
+                <label class="section-label">Pilih Mode Permainan</label>
+                <div class="mode-options">
+                    <button class="mode-btn active" data-mode="pvp">👥 vs Teman</button>
+                    <button class="mode-btn" data-mode="pvc">🤖 vs Komputer</button>
+                </div>
+            </div>
+
             <div class="player-input-group">
                 <div class="input-wrapper">
                     <label for="player1">Pemain 1 (Bidak Hitam ⚫)</label>
                     <input type="text" id="player1" placeholder="Nama Anda" value="Pemain 1">
                 </div>
-                <div class="input-wrapper">
+                <div class="input-wrapper" id="p2-input-wrapper">
                     <label for="player2">Pemain 2 (Bidak Putih ⚪)</label>
                     <input type="text" id="player2" placeholder="Nama Teman" value="Pemain 2">
                 </div>
             </div>
 
             <div class="settings-group">
+                <div class="toggle-wrapper">
+                    <label class="switch">
+                        <input type="checkbox" id="valid-moves-toggle" checked>
+                        <span class="slider round"></span>
+                    </label>
+                    <span class="toggle-label">Tampilkan Langkah Valid</span>
+                </div>
+
                 <div class="toggle-wrapper">
                     <label class="switch">
                         <input type="checkbox" id="timer-toggle">
@@ -50,7 +67,41 @@
             </div>
         </div>
 
-        <button id="start-btn" class="btn-primary">Mulai Pertandingan</button>
+        <div class="button-group-vertical">
+            <button id="start-btn" class="btn-primary">Mulai Pertandingan</button>
+            <button id="history-btn" class="btn-outline">📜 Lihat Riwayat</button>
+        </div>
+    </div>
+
+    <!-- Modal Riwayat -->
+    <div id="history-modal" class="modal hidden">
+        <div class="modal-content glass-panel history-panel">
+            <h2>Riwayat Pertandingan</h2>
+            
+            <div class="history-stats">
+                <div class="history-section">
+                    <h3>👥 vs Teman</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item"><span class="label">Hitam Menang</span><span class="value" id="stats-pvp-black">0</span></div>
+                        <div class="stat-item"><span class="label">Putih Menang</span><span class="value" id="stats-pvp-white">0</span></div>
+                        <div class="stat-item"><span class="label">Seri</span><span class="value" id="stats-pvp-draw">0</span></div>
+                    </div>
+                </div>
+                <div class="history-section">
+                    <h3>🤖 vs Komputer</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item"><span class="label">Anda Menang</span><span class="value" id="stats-pvc-win">0</span></div>
+                        <div class="stat-item"><span class="label">Komputer Menang</span><span class="value" id="stats-pvc-loss">0</span></div>
+                        <div class="stat-item"><span class="label">Seri</span><span class="value" id="stats-pvc-draw">0</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-buttons">
+                <button id="clear-history-btn" class="btn-danger">Hapus Riwayat</button>
+                <button id="close-history-btn" class="btn-secondary">Tutup</button>
+            </div>
+        </div>
     </div>
 
     <!-- Layar Permainan -->
