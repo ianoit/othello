@@ -164,8 +164,9 @@ function startGameSession() {
 
     timePerTurn = parseInt(timeInput.value) || 30;
 
-    p1NameDisplay.textContent = player1Name;
-    p2NameDisplay.textContent = player2Name;
+    timePerTurn = parseInt(timeInput.value) || 30;
+
+    updateNames();
 
     // Setup UI Visibility
     if (useTimer) {
@@ -332,7 +333,8 @@ function handleData(data) {
 
     switch (data.type) {
         case 'move':
-            makeMove(data.row, data.col, true); // true = remote move
+            console.log("Remote move received:", data);
+            makeMove(data.row, data.col, true, data.player); // Pass player turn
             break;
         case 'join':
             // Host receives join request
@@ -359,8 +361,7 @@ function handleData(data) {
             if (onlineSide === 1) player2Name = data.name;
             else player1Name = data.name;
             // Update DOM immediately if game is running
-            p1NameDisplay.textContent = player1Name;
-            p2NameDisplay.textContent = player2Name;
+            updateNames();
             updateActivePlayer(); // Refresh turn message
             break;
         case 'restart':
@@ -368,11 +369,18 @@ function handleData(data) {
             break;
         case 'force_start':
             // Received manual start signal
+            console.log("Force start received from", data.name);
             if (onlineSide === 1) player2Name = data.name;
             else player1Name = data.name;
+            updateNames();
             startGameSession();
             break;
     }
+}
+
+function updateNames() {
+    p1NameDisplay.textContent = player1Name;
+    p2NameDisplay.textContent = player2Name;
 }
 
 
@@ -438,17 +446,29 @@ function getValidMoves(player) {
     return moves;
 }
 
-function makeMove(row, col, isRemote = false) {
+function makeMove(row, col, isRemote = false, remotePlayer = null) {
     if (gameOver) return;
     // Prevent player from moving during computer's turn
     if (gameMode === 'pvc' && currentPlayer === 2) return;
 
-    // Prevent moving if not your turn in Online mode
+    // Prevent moving if not your turn in Online mode (Local only)
     if (isOnlineGame && !isRemote) {
         if (onlineSide !== currentPlayer) return;
     }
 
-    if (!isValidMove(row, col, currentPlayer)) return;
+    // Sync Turn for Remote Moves
+    if (isRemote && remotePlayer) {
+        if (currentPlayer !== remotePlayer) {
+            console.warn(`Sync Warning: Local currentPlayer (${currentPlayer}) != Remote (${remotePlayer}). Fixing...`);
+            currentPlayer = remotePlayer;
+            updateActivePlayer();
+        }
+    }
+
+    if (!isValidMove(row, col, currentPlayer)) {
+        console.error("Invalid move attempted:", row, col, currentPlayer);
+        return;
+    }
 
     // Stop timer sementara animasi jalan (opsional, tapi lebih adil)
     if (useTimer) clearInterval(timerInterval);
@@ -456,10 +476,14 @@ function makeMove(row, col, isRemote = false) {
     executeMove(row, col);
 
     if (isOnlineGame && !isRemote) {
+        // Note: executeMove has already switched the turn.
+        // So the player who made the move is the OPPONENT of the current currentPlayer.
+        const movedPlayer = currentPlayer === 1 ? 2 : 1;
         conn.send({
             type: 'move',
             row: row,
-            col: col
+            col: col,
+            player: movedPlayer
         });
     }
 }
