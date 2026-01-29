@@ -339,7 +339,7 @@ function handleData(data) {
     switch (data.type) {
         case 'move':
             console.log("Remote move received:", data);
-            makeMove(data.row, data.col, true, data.player); // Pass player turn
+            makeMove(data.row, data.col, true, data.player, data.board); // Pass board for sync
             break;
         case 'join':
             // Host receives join request
@@ -451,7 +451,7 @@ function getValidMoves(player) {
     return moves;
 }
 
-function makeMove(row, col, isRemote = false, remotePlayer = null) {
+function makeMove(row, col, isRemote = false, remotePlayer = null, remoteBoard = null) {
     if (gameOver) return;
     // Prevent player from moving during computer's turn
     if (gameMode === 'pvc' && currentPlayer === 2) return;
@@ -472,6 +472,19 @@ function makeMove(row, col, isRemote = false, remotePlayer = null) {
 
     if (!isValidMove(row, col, currentPlayer)) {
         console.error("Invalid move attempted:", row, col, currentPlayer);
+
+        // Auto-fix desync if we have remote board
+        if (isRemote && remoteBoard) {
+            console.warn("Desync detected! Forcing board sync from remote.");
+            board = remoteBoard;
+            updateUI();
+            // Since the board is already the 'next' state (post-move), 
+            // we just need to switch turn to match the game flow.
+            // executeMove does: update board -> switchTurn.
+            // We skipped update board (by overwriting), so we just call switchTurn.
+            switchTurn();
+            return;
+        }
         return;
     }
 
@@ -489,11 +502,11 @@ function makeMove(row, col, isRemote = false, remotePlayer = null) {
                 type: 'move',
                 row: row,
                 col: col,
-                player: movedPlayer
+                player: movedPlayer,
+                board: board // Send full board state for sync
             });
         } else {
             console.error("Cannot send move: Connection not open");
-            // Optional: Show toast/alert
         }
     }
 }
@@ -797,6 +810,10 @@ function loadStats() {
     const savedStats = localStorage.getItem('othelloStats');
     if (savedStats) {
         gameStats = JSON.parse(savedStats);
+        // Ensure online stats exist (migration for old saves)
+        if (!gameStats.online) {
+            gameStats.online = { win: 0, loss: 0, draw: 0 };
+        }
     }
 }
 
@@ -814,6 +831,9 @@ function updateStats(scores) {
         else if (scores.white > scores.black) gameStats.pvc.loss++; // Computer (White) wins
         else gameStats.pvc.draw++;
     } else if (gameMode === 'online') {
+        // Safety check for online stats
+        if (!gameStats.online) gameStats.online = { win: 0, loss: 0, draw: 0 };
+
         if (onlineSide === 1) { // I am Black
             if (scores.black > scores.white) gameStats.online.win++;
             else if (scores.white > scores.black) gameStats.online.loss++;
