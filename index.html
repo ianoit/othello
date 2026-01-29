@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
 </head>
 <body>
 
@@ -29,10 +30,11 @@
                 <div class="mode-options">
                     <button class="mode-btn active" data-mode="pvp">👥 vs Teman</button>
                     <button class="mode-btn" data-mode="pvc">🤖 vs Komputer</button>
+                    <button class="mode-btn" data-mode="online">🌐 vs Online</button>
                 </div>
             </div>
 
-            <div class="player-input-group">
+            <div class="player-input-group" id="local-inputs">
                 <div class="input-wrapper">
                     <label for="player1">Pemain 1 (Bidak Hitam ⚫)</label>
                     <input type="text" id="player1" placeholder="Nama Anda" value="Pemain 1">
@@ -40,6 +42,38 @@
                 <div class="input-wrapper" id="p2-input-wrapper">
                     <label for="player2">Pemain 2 (Bidak Putih ⚪)</label>
                     <input type="text" id="player2" placeholder="Nama Teman" value="Pemain 2">
+                </div>
+            </div>
+
+            <!-- Online Setup Area (Hidden by default) -->
+            <div id="online-setup" class="hidden">
+                <div class="online-tabs">
+                    <button class="tab-btn active" id="tab-host">Buat Room</button>
+                    <button class="tab-btn" id="tab-join">Gabung Room</button>
+                </div>
+
+                <div id="host-panel" class="online-panel">
+                    <p class="instruction">Bagikan ID ini ke teman Anda:</p>
+                    <div class="id-display-group">
+                        <input type="text" id="my-peer-id" readonly placeholder="Generating ID...">
+                        <button id="copy-btn" class="btn-icon" title="Salin ID">📋</button>
+                    </div>
+                    <div class="status-indicator">
+                        <span class="loader"></span> Menunggu lawan...
+                    </div>
+                </div>
+
+                <div id="join-panel" class="online-panel hidden">
+                    <p class="instruction">Masukkan ID teman Anda:</p>
+                    <div class="input-wrapper">
+                        <input type="text" id="opponent-id" placeholder="Contoh: xxxxx-xxxxx">
+                    </div>
+                    <button id="connect-btn" class="btn-primary small">Sambungkan</button>
+                </div>
+                
+                <div class="input-wrapper" style="margin-top: 15px;">
+                    <label for="online-player-name">Nama Anda</label>
+                    <input type="text" id="online-player-name" placeholder="Nama Anda" value="Player 1">
                 </div>
             </div>
 
@@ -93,6 +127,14 @@
                         <div class="stat-item"><span class="label">Anda Menang</span><span class="value" id="stats-pvc-win">0</span></div>
                         <div class="stat-item"><span class="label">Komputer Menang</span><span class="value" id="stats-pvc-loss">0</span></div>
                         <div class="stat-item"><span class="label">Seri</span><span class="value" id="stats-pvc-draw">0</span></div>
+                    </div>
+                </div>
+                <div class="history-section">
+                    <h3>🌐 vs Online</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item"><span class="label">Menang</span><span class="value" id="stats-online-win">0</span></div>
+                        <div class="stat-item"><span class="label">Kalah</span><span class="value" id="stats-online-loss">0</span></div>
+                        <div class="stat-item"><span class="label">Seri</span><span class="value" id="stats-online-draw">0</span></div>
                     </div>
                 </div>
             </div>
