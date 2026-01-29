@@ -131,7 +131,13 @@ timerToggle.addEventListener('change', (e) => {
 
 document.getElementById('start-btn').addEventListener('click', () => {
     if (gameMode === 'online') {
-        alert("Menunggu koneksi lawan... Game akan mulai otomatis.");
+        if (conn && conn.open) {
+            // Allow manual start if connected (Fallback)
+            conn.send({ type: 'force_start', name: onlinePlayerName.value });
+            startGameSession();
+        } else {
+            alert("Menunggu koneksi lawan... Game akan mulai otomatis saat terhubung.");
+        }
         return;
     }
     startGameSession();
@@ -263,7 +269,7 @@ function initPeer() {
         // Someone connected to us (We are Host)
         setupConnection(connection);
         onlineSide = 1; // Host is Black
-        alert("Teman terhubung! Anda bermain sebagai Hitam.");
+        document.querySelector('.status-indicator').innerHTML = "✅ Teman terhubung! Menginisialisasi...";
     });
 
     peer.on('error', (err) => {
@@ -281,18 +287,22 @@ function connectToPeer(peerId) {
 function setupConnection(connection) {
     conn = connection;
 
-    conn.on('open', () => {
+    const onOpen = () => {
         // Connection established
-        // Connection established
+        document.querySelector('.status-indicator').innerHTML = "✅ Terhubung!";
+
         if (onlineSide === 2) {
-            alert("Terhubung ke Host! Game akan segera mulai...");
-            // Send join request with name
+            // Joiner sends join request
+            console.log("Connected to Host. Sending join...");
             conn.send({ type: 'join', name: onlinePlayerName.value });
         }
+    };
 
-        // Update UI to show connected state
-        document.querySelector('.status-indicator').innerHTML = "✅ Terhubung!";
-    });
+    if (conn.open) {
+        onOpen();
+    } else {
+        conn.on('open', onOpen);
+    }
 
     conn.on('data', (data) => {
         handleData(data);
@@ -300,7 +310,7 @@ function setupConnection(connection) {
 
     conn.on('close', () => {
         alert("Koneksi terputus!");
-        // Handle disconnection
+        document.querySelector('.status-indicator').innerHTML = "❌ Terputus";
     });
 }
 
@@ -342,6 +352,12 @@ function handleData(data) {
             break;
         case 'restart':
             initGame(true);
+            break;
+        case 'force_start':
+            // Received manual start signal
+            if (onlineSide === 1) player2Name = data.name;
+            else player1Name = data.name;
+            startGameSession();
             break;
     }
 }
