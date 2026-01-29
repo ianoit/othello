@@ -77,9 +77,17 @@ body {
 }
 
 @keyframes float {
-    0% { transform: translate(0, 0); }
-    50% { transform: translate(30px, 50px); }
-    100% { transform: translate(0, 0); }
+    0% {
+        transform: translate(0, 0);
+    }
+
+    50% {
+        transform: translate(30px, 50px);
+    }
+
+    100% {
+        transform: translate(0, 0);
+    }
 }
 
 /* Glassmorphism Panel */
@@ -150,7 +158,7 @@ body {
     padding: 10px;
     border: 1px solid #ddd;
     border-radius: 10px;
-    background: rgba(255,255,255,0.6);
+    background: rgba(255, 255, 255, 0.6);
     cursor: pointer;
     font-size: 0.85rem;
     font-weight: 600;
@@ -200,7 +208,7 @@ body {
 .settings-group {
     margin-top: 15px;
     padding-top: 15px;
-    border-top: 1px solid rgba(0,0,0,0.1);
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .toggle-wrapper {
@@ -223,7 +231,7 @@ body {
     height: 26px;
 }
 
-.switch input { 
+.switch input {
     opacity: 0;
     width: 0;
     height: 0;
@@ -251,15 +259,15 @@ body {
     transition: .4s;
 }
 
-input:checked + .slider {
+input:checked+.slider {
     background-color: var(--primary-color);
 }
 
-input:focus + .slider {
+input:focus+.slider {
     box-shadow: 0 0 1px var(--primary-color);
 }
 
-input:checked + .slider:before {
+input:checked+.slider:before {
     transform: translateX(24px);
 }
 
@@ -276,8 +284,15 @@ input:checked + .slider:before {
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Buttons */
@@ -388,7 +403,7 @@ input:checked + .slider:before {
 .player-card.active {
     background: white;
     border-color: var(--primary-color);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     transform: scale(1.05);
 }
 
@@ -412,8 +427,8 @@ input:checked + .slider:before {
     width: 16px;
     height: 16px;
     border-radius: 50%;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    border: 1px solid rgba(0,0,0,0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .piece-label {
@@ -434,7 +449,7 @@ input:checked + .slider:before {
     font-weight: 600;
     margin-top: 5px;
     color: #555;
-    background: rgba(0,0,0,0.05);
+    background: rgba(0, 0, 0, 0.05);
     padding: 2px 8px;
     border-radius: 10px;
 }
@@ -445,9 +460,17 @@ input:checked + .slider:before {
 }
 
 @keyframes pulse {
-    0% { opacity: 1; }
-    50% { opacity: 0.5; }
-    100% { opacity: 1; }
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+
+    100% {
+        opacity: 1;
+    }
 }
 
 .vs-badge {
@@ -467,13 +490,14 @@ input:checked + .slider:before {
     grid-template-columns: repeat(8, 1fr);
     grid-template-rows: repeat(8, 1fr);
     width: 100%;
-    max-width: 400px; /* Limit board size */
+    max-width: 400px;
+    /* Limit board size */
     aspect-ratio: 1 / 1;
     background-color: var(--board-border);
     border: 5px solid var(--board-border);
     border-radius: 4px;
     gap: 1px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
 }
 
 .cell {
@@ -489,7 +513,7 @@ input:checked + .slider:before {
     content: '';
     width: 25%;
     height: 25%;
-    background-color: rgba(0,0,0,0.15);
+    background-color: rgba(0, 0, 0, 0.15);
     border-radius: 50%;
     position: absolute;
     transition: transform 0.2s;
@@ -497,14 +521,14 @@ input:checked + .slider:before {
 
 .cell.valid-move:hover::after {
     transform: scale(1.5);
-    background-color: rgba(0,0,0,0.3);
+    background-color: rgba(0, 0, 0, 0.3);
 }
 
 .piece {
     width: 85%;
     height: 85%;
     border-radius: 50%;
-    box-shadow: 1px 2px 4px rgba(0,0,0,0.4);
+    box-shadow: 1px 2px 4px rgba(0, 0, 0, 0.4);
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
@@ -521,8 +545,13 @@ input:checked + .slider:before {
 }
 
 @keyframes popIn {
-    0% { transform: scale(0); }
-    100% { transform: scale(1); }
+    0% {
+        transform: scale(0);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 .footer-controls {
@@ -571,8 +600,15 @@ input:checked + .slider:before {
 }
 
 @keyframes scaleUp {
-    from { transform: scale(0.8); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
+    from {
+        transform: scale(0.8);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
 .trophy-icon {
@@ -582,9 +618,22 @@ input:checked + .slider:before {
 }
 
 @keyframes bounce {
-    0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
-    40% {transform: translateY(-20px);}
-    60% {transform: translateY(-10px);}
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-20px);
+    }
+
+    60% {
+        transform: translateY(-10px);
+    }
 }
 
 #winner-text {
@@ -686,6 +735,121 @@ input:checked + .slider:before {
     z-index: 200;
 }
 
+/* Responsive Design */
+@media (max-width: 600px) {
+    .screen {
+        padding: 20px;
+    }
+
+    .title {
+        font-size: 2.5rem;
+    }
+
+    .game-container {
+        padding: 15px;
+    }
+
+    .header {
+        flex-direction: row;
+        gap: 10px;
+        margin-bottom: 15px;
+    }
+
+    .player-card {
+        padding: 8px 10px;
+        width: 45%;
+    }
+
+    .player-name {
+        font-size: 0.8rem;
+        max-width: 60px;
+    }
+
+    .score-display {
+        font-size: 1.5rem;
+    }
+
+    .vs-badge {
+        font-size: 1rem;
+    }
+
+    .board {
+        max-width: 100%;
+        /* Full width on mobile */
+        border-width: 3px;
+    }
+
+
+
+    .piece {
+        width: 80%;
+        height: 80%;
+    }
+
+    .footer-controls {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .action-buttons {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .btn-secondary {
+        flex: 1;
+        justify-content: center;
+    }
+
+    /* Modal Adjustments */
+    .modal-content {
+        padding: 25px;
+        width: 95%;
+    }
+
+    .trophy-icon {
+        font-size: 3rem;
+    }
+
+    .final-stats {
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .stat-value {
+        font-size: 1.2rem;
+    }
+
+    /* Online Mode Mobile */
+    .id-display-group {
+        flex-direction: column;
+    }
+
+    .btn-icon {
+        width: 100%;
+    }
+}
+
+/* Small Mobile Devices */
+@media (max-width: 380px) {
+    .title {
+        font-size: 2rem;
+    }
+
+    .mode-options {
+        flex-direction: column;
+    }
+
+    .player-card {
+        padding: 5px;
+    }
+
+    .piece-label {
+        display: none;
+        /* Hide label to save space */
+    }
+}
+
 /* Online Mode Styles */
 .online-tabs {
     display: flex;
@@ -710,7 +874,7 @@ input:checked + .slider:before {
 .tab-btn.active {
     background: white;
     color: var(--primary-color);
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .online-panel {
@@ -777,8 +941,13 @@ input:checked + .slider:before {
 }
 
 @keyframes rotation {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .btn-primary.small {
