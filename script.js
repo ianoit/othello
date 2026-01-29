@@ -107,7 +107,8 @@ modeBtns.forEach(btn => {
         } else if (gameMode === 'online') {
             localInputs.classList.add('hidden');
             onlineSetup.classList.remove('hidden');
-            if (!peer) initPeer(); // Init peer when online mode selected
+            if (!peer) initPeer();
+            // Don't reset conn here, allow persistent connection if switching modes briefly
             timerWrapper.classList.add('hidden');
         } else {
             // PVP
@@ -137,13 +138,8 @@ document.getElementById('start-btn').addEventListener('click', () => {
                 conn.send({ type: 'force_start', name: onlinePlayerName.value });
                 startGameSession();
             } else {
-                console.log("Force starting... Connection state: Initializing");
-                conn.on('open', () => {
-                    console.log("Connection opened. Sending force_start.");
-                    conn.send({ type: 'force_start', name: onlinePlayerName.value });
-                    startGameSession();
-                });
-                alert("Koneksi sedang dibangun. Game akan mulai otomatis saat siap.");
+                console.warn("Force start failed. Connection state:", conn.open);
+                alert("Koneksi belum siap (Initializing). Tunggu sebentar atau refresh jika macet.");
             }
         } else {
             alert("Belum ada koneksi! Pastikan teman sudah bergabung.");
@@ -269,14 +265,8 @@ connectBtn.addEventListener('click', () => {
 });
 
 function initPeer() {
-    peer = new Peer(null, {
-        config: {
-            'iceServers': [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' }
-            ]
-        }
-    });
+    // Revert to default config (Google STUN is default) and add debug
+    peer = new Peer({ debug: 2 });
 
     peer.on('open', (id) => {
         myPeerId = id;
@@ -297,7 +287,12 @@ function initPeer() {
 }
 
 function connectToPeer(peerId) {
-    const connection = peer.connect(peerId);
+    console.log("Connecting to:", peerId);
+    if (conn) conn.close(); // Close existing connection if any
+
+    const connection = peer.connect(peerId, {
+        reliable: true
+    });
     setupConnection(connection);
     onlineSide = 2; // Joiner is White
 }
@@ -332,8 +327,9 @@ function setupConnection(connection) {
     });
 
     conn.on('close', () => {
-        alert("Koneksi terputus!");
+        console.log("Connection closed");
         document.querySelector('.status-indicator').innerHTML = "❌ Terputus";
+        conn = null; // Clear connection object
     });
 }
 
