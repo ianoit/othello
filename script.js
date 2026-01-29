@@ -131,12 +131,13 @@ timerToggle.addEventListener('change', (e) => {
 
 document.getElementById('start-btn').addEventListener('click', () => {
     if (gameMode === 'online') {
-        if (conn && conn.open) {
-            // Allow manual start if connected (Fallback)
+        if (conn) {
+            // Allow manual start even if connection is initializing (data will be queued)
+            console.log("Force starting... Connection state:", conn.open);
             conn.send({ type: 'force_start', name: onlinePlayerName.value });
             startGameSession();
         } else {
-            alert("Menunggu koneksi lawan... Game akan mulai otomatis saat terhubung.");
+            alert("Belum ada koneksi! Pastikan teman sudah bergabung.");
         }
         return;
     }
@@ -258,7 +259,14 @@ connectBtn.addEventListener('click', () => {
 });
 
 function initPeer() {
-    peer = new Peer();
+    peer = new Peer(null, {
+        config: {
+            'iceServers': [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' }
+            ]
+        }
+    });
 
     peer.on('open', (id) => {
         myPeerId = id;
@@ -306,6 +314,11 @@ function setupConnection(connection) {
 
     conn.on('data', (data) => {
         handleData(data);
+    });
+
+    conn.on('error', (err) => {
+        console.error("Connection Error:", err);
+        document.querySelector('.status-indicator').innerHTML = "⚠️ Error Koneksi";
     });
 
     conn.on('close', () => {
