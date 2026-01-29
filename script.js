@@ -132,10 +132,19 @@ timerToggle.addEventListener('change', (e) => {
 document.getElementById('start-btn').addEventListener('click', () => {
     if (gameMode === 'online') {
         if (conn) {
-            // Allow manual start even if connection is initializing (data will be queued)
-            console.log("Force starting... Connection state:", conn.open);
-            conn.send({ type: 'force_start', name: onlinePlayerName.value });
-            startGameSession();
+            if (conn.open) {
+                console.log("Force starting... Connection state: Open");
+                conn.send({ type: 'force_start', name: onlinePlayerName.value });
+                startGameSession();
+            } else {
+                console.log("Force starting... Connection state: Initializing");
+                conn.on('open', () => {
+                    console.log("Connection opened. Sending force_start.");
+                    conn.send({ type: 'force_start', name: onlinePlayerName.value });
+                    startGameSession();
+                });
+                alert("Koneksi sedang dibangun. Game akan mulai otomatis saat siap.");
+            }
         } else {
             alert("Belum ada koneksi! Pastikan teman sudah bergabung.");
         }
@@ -387,7 +396,7 @@ function updateNames() {
 // --- Game Logic ---
 
 function initGame(isRemoteRestart = false) {
-    if (isOnlineGame && !isRemoteRestart && conn) {
+    if (isOnlineGame && !isRemoteRestart && conn && conn.open) {
         conn.send({ type: 'restart' });
     }
 
@@ -476,15 +485,20 @@ function makeMove(row, col, isRemote = false, remotePlayer = null) {
     executeMove(row, col);
 
     if (isOnlineGame && !isRemote) {
-        // Note: executeMove has already switched the turn.
-        // So the player who made the move is the OPPONENT of the current currentPlayer.
-        const movedPlayer = currentPlayer === 1 ? 2 : 1;
-        conn.send({
-            type: 'move',
-            row: row,
-            col: col,
-            player: movedPlayer
-        });
+        if (conn && conn.open) {
+            // Note: executeMove has already switched the turn.
+            // So the player who made the move is the OPPONENT of the current currentPlayer.
+            const movedPlayer = currentPlayer === 1 ? 2 : 1;
+            conn.send({
+                type: 'move',
+                row: row,
+                col: col,
+                player: movedPlayer
+            });
+        } else {
+            console.error("Cannot send move: Connection not open");
+            // Optional: Show toast/alert
+        }
     }
 }
 
