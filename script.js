@@ -131,21 +131,16 @@ timerToggle.addEventListener('change', (e) => {
 
 document.getElementById('start-btn').addEventListener('click', () => {
     if (gameMode === 'online') {
-        if (!conn) {
-            alert("Belum tersambung dengan lawan!");
-            return;
-        }
-        // Sync names
-        conn.send({ type: 'name', name: onlinePlayerName.value });
+        alert("Menunggu koneksi lawan... Game akan mulai otomatis.");
+        return;
+    }
+    startGameSession();
+});
 
-        if (onlineSide === 1) {
-            player1Name = onlinePlayerName.value;
-            // Player 2 name will be updated when received
-        } else {
-            player2Name = onlinePlayerName.value;
-        }
+function startGameSession() {
+    if (gameMode === 'online') {
         isOnlineGame = true;
-        useTimer = false; // Force disable timer for online
+        useTimer = false;
     } else {
         player1Name = document.getElementById('player1').value || "Hitam";
         player2Name = document.getElementById('player2').value || "Putih";
@@ -156,6 +151,9 @@ document.getElementById('start-btn').addEventListener('click', () => {
 
     useTimer = timerToggle.checked;
     showValidMoves = validMovesToggle.checked;
+
+    // Force disable timer for online (double check)
+    if (isOnlineGame) useTimer = false;
 
     timePerTurn = parseInt(timeInput.value) || 30;
 
@@ -182,7 +180,7 @@ document.getElementById('start-btn').addEventListener('click', () => {
     }, 100);
 
     initGame();
-});
+}
 
 document.getElementById('restart-btn').addEventListener('click', initGame);
 document.getElementById('modal-restart-btn').addEventListener('click', () => {
@@ -285,10 +283,11 @@ function setupConnection(connection) {
 
     conn.on('open', () => {
         // Connection established
+        // Connection established
         if (onlineSide === 2) {
-            alert("Terhubung ke Host! Anda bermain sebagai Putih.");
-            // Send name immediately
-            conn.send({ type: 'name', name: onlinePlayerName.value });
+            alert("Terhubung ke Host! Game akan segera mulai...");
+            // Send join request with name
+            conn.send({ type: 'join', name: onlinePlayerName.value });
         }
 
         // Update UI to show connected state
@@ -312,9 +311,34 @@ function handleData(data) {
         case 'move':
             makeMove(data.row, data.col, true); // true = remote move
             break;
+        case 'join':
+            // Host receives join request
+            if (onlineSide === 1) {
+                player2Name = data.name;
+                player1Name = onlinePlayerName.value; // Ensure my name is set
+                // Send welcome back with Host name
+                conn.send({ type: 'welcome', name: player1Name });
+                // Start Game for Host
+                startGameSession();
+            }
+            break;
+        case 'welcome':
+            // Joiner receives welcome
+            if (onlineSide === 2) {
+                player1Name = data.name;
+                player2Name = onlinePlayerName.value; // Ensure my name is set
+                // Start Game for Joiner
+                startGameSession();
+            }
+            break;
         case 'name':
+            // Fallback / Update name mid-game
             if (onlineSide === 1) player2Name = data.name;
             else player1Name = data.name;
+            // Update DOM immediately if game is running
+            p1NameDisplay.textContent = player1Name;
+            p2NameDisplay.textContent = player2Name;
+            updateActivePlayer(); // Refresh turn message
             break;
         case 'restart':
             initGame(true);
