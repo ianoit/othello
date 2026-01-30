@@ -26,8 +26,13 @@ body {
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    overflow: hidden;
+    overflow-x: hidden;
+    /* Prevent horizontal scroll */
+    overflow-y: auto;
+    /* Allow vertical scroll */
     color: var(--text-color);
+    padding: 20px 0;
+    /* Add padding to prevent cut-off on small screens */
 }
 
 /* Background Blobs Animation */
@@ -93,11 +98,11 @@ body {
 /* Glassmorphism Panel */
 .glass-panel {
     background: var(--glass-bg);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--glass-border);
-    border-radius: 20px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 24px;
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
 }
 
 .screen {
@@ -108,6 +113,21 @@ body {
     flex-direction: column;
     align-items: center;
     transition: opacity 0.3s, transform 0.3s;
+    margin: auto;
+    /* Center in the scrollable view */
+    animation: screenEntrance 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes screenEntrance {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
 }
 
 .hidden {
@@ -116,11 +136,28 @@ body {
 
 /* Start Screen */
 .title {
-    font-size: 3rem;
-    font-weight: 700;
-    color: var(--primary-color);
+    font-size: 3.5rem;
+    font-weight: 800;
+    background: linear-gradient(to right, var(--primary-color), #a29bfe);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
     margin-bottom: 5px;
-    letter-spacing: -1px;
+    letter-spacing: -2px;
+    text-shadow: 0 10px 20px rgba(108, 92, 231, 0.2);
+    animation: titleFloat 3s ease-in-out infinite;
+}
+
+@keyframes titleFloat {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-5px);
+    }
 }
 
 .subtitle {
@@ -173,7 +210,9 @@ body {
 }
 
 .mode-btn:hover:not(.active) {
-    background: #f1f1f1;
+    background: #fff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
 }
 
 .input-wrapper {
@@ -202,6 +241,8 @@ body {
 .input-wrapper input:focus {
     border-color: var(--primary-color);
     background: white;
+    box-shadow: 0 0 0 4px rgba(108, 92, 231, 0.1);
+    transform: translateY(-1px);
 }
 
 /* Settings & Timer Toggle */
@@ -318,8 +359,8 @@ input:checked+.slider:before {
 }
 
 .btn-primary:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(108, 92, 231, 0.5);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 10px 25px rgba(108, 92, 231, 0.6);
 }
 
 .btn-primary:active {
@@ -507,6 +548,8 @@ input:checked+.slider:before {
     display: flex;
     justify-content: center;
     align-items: center;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
 }
 
 .cell.valid-move::after {
@@ -739,6 +782,8 @@ input:checked+.slider:before {
 @media (max-width: 600px) {
     .screen {
         padding: 20px;
+        /* Ensure content fits on mobile screens */
+        min-height: auto;
     }
 
     .title {
@@ -827,6 +872,25 @@ input:checked+.slider:before {
 
     .btn-icon {
         width: 100%;
+    }
+}
+
+/* Adjust for shorter screens (e.g. iPhone SE) to avoid scrolling during play */
+@media (max-height: 750px) and (orientation: portrait) {
+    .board {
+        max-width: 340px;
+    }
+
+    .player-card {
+        padding: 8px;
+    }
+
+    .score-display {
+        font-size: 1.4rem;
+    }
+
+    .screen {
+        padding-top: 10px;
     }
 }
 
